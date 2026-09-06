@@ -229,7 +229,7 @@ test('Employee cannot become their own manager', async () => {
 
 test('Employee list/search/filter, update, and lifecycle preserve records', async () => {
   const { service, Model } = fixture();
-  const { employee: manager } = await service.createEmployee(input);
+  const { employee: manager } = await service.createEmployee({ ...input, jobPosition: 'Manager' });
   const { employee: report } = await service.createEmployee({ ...input, email: 'anita@company.com', firstName: 'Anita', employeeType: 'PART_TIME', managerId: manager._id });
   const updated = await service.updateEmployee(report._id, { phone: '8888888888', jobPosition: 'Senior Engineer' });
   assert.equal(updated.phone, '8888888888');

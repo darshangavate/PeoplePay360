@@ -21,9 +21,9 @@ const attendanceApi = {
       .post('/attendance/check-in', {})
       .then((response) => response.data.data),
 
-  checkOut: () =>
+  checkOut: (confirmEarlyCheckout = false) =>
     httpClient
-      .post('/attendance/check-out', {})
+      .post('/attendance/check-out', confirmEarlyCheckout ? { confirmEarlyCheckout: true } : {})
       .then((response) => response.data.data),
 
   create: (payload) =>

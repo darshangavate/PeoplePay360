@@ -4,6 +4,7 @@ import AppLayout from '../../layouts/AppLayout/AppLayout'
 import AccessDeniedPage from '../../features/auth/AccessDeniedPage'
 import ChangePasswordPage from '../../features/auth/ChangePasswordPage'
 import HomePage from '../../features/auth/HomePage'
+import ForgotPasswordPage from '../../features/auth/ForgotPasswordPage'
 import LoginPage from '../../features/auth/LoginPage'
 import CreateUserPage from '../../features/users/CreateUserPage'
 import UserDetailPage from '../../features/users/UserDetailPage'
@@ -45,7 +46,7 @@ import RoleRoute from './RoleRoute'
 
 export default function AppRoutes() {
   return <Routes>
-    <Route element={<AuthLayout />}><Route path="/login" element={<LoginPage />} /></Route>
+    <Route element={<AuthLayout />}><Route path="/login" element={<LoginPage />} /><Route path="/forgot-password" element={<ForgotPasswordPage />} /></Route>
     <Route element={<ProtectedRoute />}>
       <Route path="/change-password" element={<AuthLayout />}><Route index element={<ChangePasswordPage />} /></Route>
       <Route element={<AppLayout />}>

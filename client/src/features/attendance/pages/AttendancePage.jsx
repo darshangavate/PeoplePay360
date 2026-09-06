@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../../app/providers/authContext'
 import { getApiError } from '../../../shared/api/apiError'
 import DataTable from '../../../shared/components/DataTable/DataTable'
+import ConfirmDialog from '../../../shared/components/ConfirmDialog/ConfirmDialog'
 import ErrorBanner from '../../../shared/components/ErrorBanner/ErrorBanner'
 import FormField from '../../../shared/components/FormField/FormField'
 import LoadingState from '../../../shared/components/LoadingState/LoadingState'
@@ -38,6 +39,7 @@ export default function AttendancePage() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState('')
   const [manual, setManual] = useState(null)
+  const [earlyCheckout, setEarlyCheckout] = useState(null)
 
   const load = () => {
     const query = compact(employeeView ? { status: filters.status, from: filters.from, to: filters.to, page: filters.page, limit: filters.limit } : filters)
@@ -53,9 +55,13 @@ export default function AttendancePage() {
     return () => { active = false }
   }, [employeeView, filters])
 
-  const clock = async (action) => {
+  const clock = async (action, confirmed = false) => {
     setBusy(action); setError('')
-    try { await attendanceApi[action](); await load() } catch (requestError) { setError(getApiError(requestError).message) }
+    try { await attendanceApi[action](confirmed); setEarlyCheckout(null); await load() } catch (requestError) {
+      const apiError = getApiError(requestError)
+      if (action === 'checkOut' && apiError.details.confirmationRequired) setEarlyCheckout(apiError.details)
+      else setError(apiError.message)
+    }
     finally { setBusy('') }
   }
   const createManual = async (event) => {
@@ -116,5 +122,5 @@ export default function AttendancePage() {
 
   return <><header className="page-header"><div><p className="eyebrow">Attendance</p><h1>{employeeView ? 'My Attendance' : 'Attendance'}</h1><p>{employeeView ? 'Clock in, clock out, and review your attendance history.' : 'Review attendance and correct records using backend-derived status and worked hours.'}</p></div><div className="header-actions">{employeeView ? <><button className="button" disabled={Boolean(busy) || loading || hasAttendanceToday} onClick={() => clock('checkIn')}>{busy === 'checkIn' ? 'Checking in...' : 'Check In'}</button><button className="button button--secondary" disabled={Boolean(busy) || loading || !hasOpenAttendance} onClick={() => clock('checkOut')}>{busy === 'checkOut' ? 'Checking out...' : 'Check Out'}</button></> : <button className="button" onClick={() => setManual({ ...blankManual })}>+ Manual Attendance</button>}</div></header><ErrorBanner message={error} />
     {!employeeView && manual && <form className="panel inline-form" onSubmit={createManual}><h2>Manual attendance</h2><div className="form-grid"><FormField label="Employee *"><select required value={manual.employeeId} onChange={(event) => setManual({ ...manual, employeeId: event.target.value })}><option value="">Select employee</option>{employees.map((employee) => <option key={recordId(employee)} value={recordId(employee)}>{employeeLabel(employee)} ({employee.employeeId})</option>)}</select></FormField><FormField label="Check in *"><input required type="datetime-local" value={manual.checkIn} onChange={(event) => setManual({ ...manual, checkIn: event.target.value })} /></FormField><FormField label="Check out *"><input required type="datetime-local" min={oneMinuteAfter(manual.checkIn)} value={manual.checkOut} onChange={(event) => setManual({ ...manual, checkOut: event.target.value })} onBlur={() => { if (manual.checkIn && manual.checkOut && new Date(manual.checkOut).getTime() <= new Date(manual.checkIn).getTime()) { setError('Check-out time must be after check-in time.') } }} /></FormField><FormField label="Notes"><textarea rows="2" maxLength={2000} value={manual.notes} onChange={(event) => setManual({ ...manual, notes: event.target.value })} /><small>{manual.notes.length}/2000 characters</small></FormField></div><div className="form-actions"><button type="button" className="button button--secondary" onClick={() => setManual(null)}>Cancel</button><button className="button" disabled={busy === 'manual' || manualTimeInvalid}>{busy === 'manual' ? 'Saving...' : 'Create'}</button></div></form>}
-    <section className="panel">{!employeeView && <div className="operation-filters"><select aria-label="Filter employee" value={filters.employeeId} onChange={(event) => updateFilter('employeeId', event.target.value)}><option value="">All employees</option>{employees.map((employee) => <option key={recordId(employee)} value={recordId(employee)}>{employeeLabel(employee)}</option>)}</select><select aria-label="Filter status" value={filters.status} onChange={(event) => updateFilter('status', event.target.value)}><option value="">All statuses</option>{statuses.map((status) => <option key={status}>{status}</option>)}</select><input aria-label="From date" type="date" value={filters.from} onChange={(event) => updateFilter('from', event.target.value)} /><input aria-label="To date" type="date" value={filters.to} onChange={(event) => updateFilter('to', event.target.value)} /></div>}{loading ? <LoadingState label="Loading attendance..." /> : <><DataTable columns={columns} rows={rows.map((row) => ({ ...row, id: recordId(row) }))} emptyMessage="No attendance records found." /><Pagination meta={meta} onPageChange={(page) => setFilters({ ...filters, page })} /></>}</section></>
+    <section className="panel">{!employeeView && <div className="operation-filters"><select aria-label="Filter employee" value={filters.employeeId} onChange={(event) => updateFilter('employeeId', event.target.value)}><option value="">All employees</option>{employees.map((employee) => <option key={recordId(employee)} value={recordId(employee)}>{employeeLabel(employee)}</option>)}</select><select aria-label="Filter status" value={filters.status} onChange={(event) => updateFilter('status', event.target.value)}><option value="">All statuses</option>{statuses.map((status) => <option key={status}>{status}</option>)}</select><input aria-label="From date" type="date" value={filters.from} onChange={(event) => updateFilter('from', event.target.value)} /><input aria-label="To date" type="date" value={filters.to} onChange={(event) => updateFilter('to', event.target.value)} /></div>}{loading ? <LoadingState label="Loading attendance..." /> : <><DataTable columns={columns} rows={rows.map((row) => ({ ...row, id: recordId(row) }))} emptyMessage="No attendance records found." /><Pagination meta={meta} onPageChange={(page) => setFilters({ ...filters, page })} /></>}</section><ConfirmDialog open={Boolean(earlyCheckout)} title="Check out before your shift ends?" message={`Your scheduled workday ends at ${earlyCheckout?.scheduledEnd ? new Date(earlyCheckout.scheduledEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'the scheduled time'}. Are you sure you want to check out now?`} confirmLabel="Check out early" busy={busy === 'checkOut'} onCancel={() => setEarlyCheckout(null)} onConfirm={() => clock('checkOut', true)} /></>
 }
