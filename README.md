@@ -22,6 +22,43 @@ It is built as a modular MERN application:
 - Generated payslips and PDF export
 - Dashboard, notifications, and payroll reporting
 
+## Product screenshots
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>Employee directory</strong><br />
+      Search, filter, and manage employee records in list or Kanban views.<br /><br />
+      <img src="docs/screenshots/employees.jpeg" alt="PeoplePay360 employee directory" />
+    </td>
+    <td width="50%" valign="top">
+      <strong>Working schedule configuration</strong><br />
+      Define weekly shifts and preview backend-calculated working hours.<br /><br />
+      <img src="docs/screenshots/working-schedules.jpeg" alt="PeoplePay360 working schedule form" />
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>Time-off requests</strong><br />
+      Review employee leave requests with date, type, and status filters.<br /><br />
+      <img src="docs/screenshots/time-off-requests.jpeg" alt="PeoplePay360 time-off requests" />
+    </td>
+    <td width="50%" valign="top">
+      <strong>Payroll dashboard</strong><br />
+      Track paid salary, payslips, time off, attendance health, and payroll trends.<br /><br />
+      <img src="docs/screenshots/payroll-dashboard.jpeg" alt="PeoplePay360 payroll dashboard" />
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>Payrun processing</strong><br />
+      Review payroll warnings, payslip snapshots, net pay, and payment status.<br /><br />
+      <img src="docs/screenshots/payrun-processing.jpeg" alt="PeoplePay360 payrun processing" />
+    </td>
+    <td width="50%"></td>
+  </tr>
+</table>
+
 ## Roles
 
 | Role | Primary access |
