@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../app/providers/authContext'
 import { getApiError } from '../../shared/api/apiError'
 import ErrorBanner from '../../shared/components/ErrorBanner/ErrorBanner'
@@ -35,5 +35,5 @@ export default function LoginPage() {
     <FormField label="Email" htmlFor="email"><input id="email" type="email" autoComplete="email" required value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder="you@company.com" /></FormField>
     <FormField label="Password" htmlFor="password"><input id="password" type="password" autoComplete="current-password" required value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} placeholder="Enter your password" /></FormField>
     <button className="button button--full" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
-  </form><p className="auth-footnote">Secure access for authorized PeoplePay360 users</p></div>
+  </form><p className="auth-footnote"><Link className="button-link" to="/forgot-password">Forgot password?</Link></p><p className="auth-footnote">Secure access for authorized PeoplePay360 users</p></div>
 }
