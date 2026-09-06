@@ -21,4 +21,13 @@ function listQuery(query, own = false) {
   if (result.from && result.to) dates.range(result.from, result.to);
   return result;
 }
-module.exports = { manualInput, listQuery, id: v.id, empty: body => v.object(body ?? {}, []) };
+function checkoutInput(body) {
+  const input = body ?? {};
+  v.object(input, ['confirmEarlyCheckout']);
+  return {
+    confirmEarlyCheckout: input.confirmEarlyCheckout === undefined
+      ? false
+      : v.boolean(input.confirmEarlyCheckout, 'confirmEarlyCheckout'),
+  };
+}
+module.exports = { manualInput, listQuery, checkoutInput, id: v.id, empty: body => v.object(body ?? {}, []) };

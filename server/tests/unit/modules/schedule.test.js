@@ -49,6 +49,11 @@ test('Working Schedule CRUD, list/search/filter, and deactivate work', async () 
   const evening = await service.createSchedule({ name: 'Evening .*', workingDays: [line('MONDAY')] });
   assert.equal(standard.weeklyHours, 40);
   assert.equal((await service.getSchedule(standard._id)).name, schedule.name);
+  const localMonday = new Date(2026, 8, 7, 9, 30);
+  const attendanceContext = await service.getAttendanceContext(standard._id, localMonday);
+  assert.equal(attendanceContext.date, '2026-09-07');
+  assert.equal(attendanceContext.start.getTime(), new Date(2026, 8, 7, 9, 0).getTime());
+  assert.equal(attendanceContext.end.getTime(), new Date(2026, 8, 7, 18, 0).getTime());
   const updated = await service.updateSchedule(standard._id, { name: 'Four Day Week', workingDays: weekdays.slice(0, 4).map(line) });
   assert.equal(updated.weeklyHours, 32);
   await service.deactivateSchedule(evening._id);

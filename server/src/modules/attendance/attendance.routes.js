@@ -14,7 +14,7 @@ module.exports = function createAttendanceRouter({ authenticate, service } = {})
   router.use(authenticate);
   router.get('/attendance/me', authorize('EMPLOYEE'), validate(req => v.listQuery(req.query, true)), controller.mine);
   router.post('/attendance/check-in', authorize('EMPLOYEE'), validate(req => v.empty(req.body)), controller.checkIn);
-  router.post('/attendance/check-out', authorize('EMPLOYEE'), validate(req => v.empty(req.body)), controller.checkOut);
+  router.post('/attendance/check-out', authorize('EMPLOYEE'), validate(req => v.checkoutInput(req.body)), controller.checkOut);
   router.get('/attendance', authorize(...managers), validate(req => v.listQuery(req.query)), controller.list);
   router.post('/attendance', authorize(...managers), validate(req => v.manualInput(req.body)), controller.create);
   router.get('/attendance/:id', authorize(...Object.values(roles)), id, controller.get);

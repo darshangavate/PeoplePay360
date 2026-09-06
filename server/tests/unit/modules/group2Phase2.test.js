@@ -66,6 +66,43 @@ test('Attendance: duplicate open check-in, checkout prerequisites and time valid
   assert.ok(AttendanceModel.schema.indexes().some(([keys, options]) => options.unique && options.name === 'one_attendance_per_employee_per_day' && keys.employee === 1 && keys.date === 1));
 });
 
+test('Attendance: check-in is allowed only within the Employee assigned schedule window', async () => {
+  const beforeShift = attendanceFixture();
+  beforeShift.setClock('2026-09-07T08:59:59Z');
+  await assert.rejects(() => beforeShift.service.checkIn(actor), error => (
+    error.code === 'VALIDATION_ERROR' &&
+    error.statusCode === 422 &&
+    error.message === 'Check-in is allowed only during scheduled working hours.'
+  ));
+  assert.equal(beforeShift.Model.rows.size, 0);
+
+  const afterShift = attendanceFixture();
+  afterShift.setClock('2026-09-07T18:00:01Z');
+  await assert.rejects(() => afterShift.service.checkIn(actor), error => (
+    error.code === 'VALIDATION_ERROR' &&
+    error.statusCode === 422 &&
+    error.message === 'Check-in is allowed only during scheduled working hours.'
+  ));
+  assert.equal(afterShift.Model.rows.size, 0);
+});
+
+test('Attendance: early checkout requires explicit confirmation', async () => {
+  const { service, setClock, Model } = attendanceFixture();
+  const record = await service.checkIn(actor);
+  setClock('2026-09-07T17:00:00Z');
+  await assert.rejects(() => service.checkOut(actor), error => (
+    error.code === 'RESOURCE_CONFLICT' &&
+    error.statusCode === 409 &&
+    error.details.confirmationRequired === true &&
+    error.details.scheduledEnd === '2026-09-07T18:00:00.000Z'
+  ));
+  assert.equal((await service.getAttendance(record._id, actor)).status, 'OPEN');
+  const closed = await service.checkOut(actor, { confirmEarlyCheckout: true });
+  assert.equal(closed.status, 'PRESENT');
+  assert.equal(closed.workedMinutes, 480);
+  assert.equal(Model.rows.size, 1);
+});
+
 test('Attendance: HR correction recalculates minutes and records audit data; ownership enforced', async () => {
   const { service, setClock } = attendanceFixture();
   const record = await service.checkIn(actor);

@@ -8,7 +8,8 @@
     "start": "node src/server.js",
     "seed:salary": "node scripts/seedSalaryStructures.js",
     "seed:august-demo": "node scripts/seedAugustPayrollDemo.js",
-    "test": "node --test --test-isolation=none"
+    "test": "node --test --test-isolation=none",
+    "seed:demo": "node scripts/seedDemoCompany.js"
   },
   "keywords": [],
   "author": "",

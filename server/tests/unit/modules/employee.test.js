@@ -78,6 +78,22 @@ test('Employee schema declares unique identifiers and relationships', () => {
   assert.ok(User.schema.indexes().some(([keys, options]) => keys.employeeId === 1 && options.unique));
 });
 
+test('bootstrap Admin is never marked as requiring a password change in API responses', () => {
+  const admin = userService.serializeUser({
+    _id: missingId,
+    uniqueId: 'PP360-U-000001',
+    firstName: 'System',
+    lastName: 'Admin',
+    email: 'admin@peoplepay360.com',
+    role: roles.ADMIN,
+    accountStatus: 'ACTIVE',
+    mustChangePassword: true,
+    employeeId: null,
+  });
+
+  assert.equal(admin.mustChangePassword, false);
+});
+
 test('Employee creates with generated ID, normalized data, and valid relationships', async () => {
   const { service, UserModel, deliveries } = fixture();
   const result = await service.createEmployee({ ...input, bankDetails: {

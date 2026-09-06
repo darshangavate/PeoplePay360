@@ -15,7 +15,13 @@ function validateConfig(config) {
 
 async function provision() {
   const existingAdmin = await userService.findAdmin();
-  if (existingAdmin) return { created: false };
+  if (existingAdmin) {
+    if (existingAdmin.mustChangePassword) {
+      existingAdmin.mustChangePassword = false;
+      await existingAdmin.save();
+    }
+    return { created: false };
+  }
   const config = getBootstrapAdminConfig();
   validateConfig(config);
   const passwordHash = await hashPassword(config.password);

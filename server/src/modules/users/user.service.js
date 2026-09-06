@@ -29,7 +29,7 @@ const serializeUser = user => ({
   email: user.email,
   role: user.role,
   accountStatus: user.accountStatus,
-  mustChangePassword: user.mustChangePassword,
+  mustChangePassword: user.role === roles.ADMIN ? false : user.mustChangePassword,
   employeeId: user.employeeId ? String(user.employeeId) : null,
 });
 
@@ -59,7 +59,7 @@ const createBootstrapAdmin = ({ firstName, lastName, email, passwordHash }) => U
   { uniqueId: 'PP360-U-000001' },
   { $setOnInsert: {
     uniqueId: 'PP360-U-000001', firstName, lastName, email: normalizeEmail(email), passwordHash,
-    role: roles.ADMIN, accountStatus: ACCOUNT_STATUSES.ACTIVE, mustChangePassword: true,
+    role: roles.ADMIN, accountStatus: ACCOUNT_STATUSES.ACTIVE, mustChangePassword: false,
   } },
   { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true },
 );

@@ -39,12 +39,14 @@ function attendancePersistenceError(error) {
 function createAttendanceService({ Model = Attendance, employees, schedules, now = () => new Date() } = {}) {
   const access = createEmployeeAccess(employees);
   const scheduleAccess = createScheduleAccess(schedules);
-  async function derive(employeeId, checkIn, checkOut) {
-    let schedule = null;
-    try {
-      schedule = await scheduleAccess.attendance(employeeId, checkIn);
-    } catch (error) {
-      if (error.code !== 'VALIDATION_ERROR' || error.message !== 'No working schedule applies on this date.') throw error;
+  async function derive(employeeId, checkIn, checkOut, resolvedSchedule = null) {
+    let schedule = resolvedSchedule;
+    if (!schedule) {
+      try {
+        schedule = await scheduleAccess.attendance(employeeId, checkIn);
+      } catch (error) {
+        if (error.code !== 'VALIDATION_ERROR' || error.message !== 'No working schedule applies on this date.') throw error;
+      }
     }
     const workedMinutes = checkOut ? calculateWorkedMinutes(checkIn, checkOut) : 0;
     return {
@@ -104,12 +106,23 @@ function createAttendanceService({ Model = Attendance, employees, schedules, now
     }
   }
   async function checkOut(actor, body = {}) {
-    validation.empty(body);
+    const { confirmEarlyCheckout } = validation.checkoutInput(body);
     const employee = access.active(await access.own(actor));
     const record = await Model.findOne({ employee: employee.id, status: 'OPEN' });
     if (!record) throw new AppError('ATT-001', 'No open check-in exists.', 422);
     const checkOut = now();
-    const derived = await derive(employee.id, record.checkIn, checkOut);
+    calculateWorkedMinutes(record.checkIn, checkOut);
+    const schedule = await scheduleAccess.attendance(employee.id, record.checkIn);
+    if (checkOut < schedule.end && !confirmEarlyCheckout) {
+      throw new AppError(
+        'RESOURCE_CONFLICT',
+        'Your scheduled workday has not ended. Confirm to check out early.',
+        409,
+        'WARNING',
+        { confirmationRequired: true, scheduledEnd: schedule.end.toISOString() },
+      );
+    }
+    const derived = await derive(employee.id, record.checkIn, checkOut, schedule);
     const saved = await Model.findOneAndUpdate({ _id: record._id, status: 'OPEN', __v: record.__v },
       { $set: { ...derived, checkOut }, $inc: { __v: 1 } }, { new: true, runValidators: true });
     if (!saved) throw new AppError('RESOURCE_CONFLICT', 'Attendance changed; reload and retry.', 409);

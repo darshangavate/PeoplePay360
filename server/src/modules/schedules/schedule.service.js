@@ -26,6 +26,19 @@ function shiftForDate(schedule, date) {
   };
 }
 
+function attendanceShiftForDate(schedule, date) {
+  const day = schedule.workingDays.find(line => line.day === DAY_NAMES[date.getDay()]);
+  if (!day?.isWorkingDay) return null;
+  const [startHour, startMinute] = day.startTime.split(':').map(Number);
+  const [endHour, endMinute] = day.endTime.split(':').map(Number);
+  const start = new Date(date);
+  const end = new Date(date);
+  start.setHours(startHour, startMinute, 0, 0);
+  end.setHours(endHour, endMinute, 0, 0);
+  const datePart = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+  return { date: datePart, start, end, breakMinutes: day.breakMinutes };
+}
+
 function calculateLineHours(line) {
 
   if (!line.isWorkingDay) return 0;
@@ -120,7 +133,7 @@ function createScheduleService({ Model = WorkingSchedule } = {}) {
   }
   async function getAttendanceContext(scheduleId, at) {
     const schedule = await getSchedule(scheduleId);
-    const shift = shiftForDate(schedule, new Date(at));
+    const shift = attendanceShiftForDate(schedule, new Date(at));
     if (!shift) throw new AppError('VALIDATION_ERROR', 'No working schedule applies on this date.', 422);
     return shift;
   }

@@ -73,6 +73,7 @@ test('Contract request validation rejects status and malformed request values', 
   throwsCode(() => validation.validateCreate({ body: { ...apiInput, wageType: 'HOURLY' } }), 'VALIDATION_ERROR', 400);
   throwsCode(() => validation.validateCreate({ body: { ...apiInput, startDate: '01/01/2026' } }), 'VALIDATION_ERROR', 400);
   assert.equal(validation.validateCreate({ body: apiInput }).body.startDate.toISOString(), '2026-01-01T00:00:00.000Z');
+  assert.equal(validation.validateCreate({ body: { ...apiInput, jobPosition: 'Payroll Analyst' } }).body.jobPosition, 'Payroll Analyst');
 });
 
 test('Create validates all references and always persists Draft', async () => {

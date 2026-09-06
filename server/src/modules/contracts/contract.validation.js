@@ -19,16 +19,6 @@ const FIELDS = [
   'endDate',
 ];
 
-const JOB_POSITIONS = [
-  'Software Engineer',
-  'HR Executive',
-  'Payroll Executive',
-  'Accountant',
-  'Sales Executive',
-  'Operations Executive',
-  'Manager',
-];
-
 const fail = (
   field,
   message = errors.VALIDATION_ERROR.message,
@@ -97,19 +87,10 @@ const text = (value, field) => {
 };
 
 const jobPosition = value => {
-  const normalized = text(
+  return text(
     value,
     'jobPosition',
   );
-
-  if (!JOB_POSITIONS.includes(normalized)) {
-    fail(
-      'jobPosition',
-      'Invalid job position.',
-    );
-  }
-
-  return normalized;
 };
 
 const date = (
